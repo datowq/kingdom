@@ -3,7 +3,7 @@ import { shaderMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import React, { useRef, useState, useEffect } from "react";
 
-// Create the SkyboxMaterial shader with uniforms for sun direction
+// create the SkyboxMaterial shader with uniforms for sun direction
 const SkyboxMaterial = shaderMaterial(
   { uTime: 0, uSunDirection: new THREE.Vector3(1.0, 0.3, 0.0) },
   `// Vertex Shader
@@ -54,7 +54,6 @@ extend({ SkyboxMaterial });
 export function Skybox({ sunPosition }) {
   const ref = useRef();
 
-  // Update the shader uniform with the sun's direction
   useEffect(() => {
     if (ref.current) {
       ref.current.uSunDirection = sunPosition;
@@ -73,11 +72,9 @@ export function SunBox({ azimuth = 34, elevation = 35 }) {
   const lightHelperRef = useRef();
   const sunRef = useRef();
 
-  // Convert azimuth and elevation to radians
   const az = THREE.MathUtils.degToRad(azimuth);
   const el = THREE.MathUtils.degToRad(elevation);
 
-  // Calculate the sun's position based on azimuth and elevation
   //   const sunPosition = new THREE.Vector3(
   //     Math.cos(az) * Math.cos(el),
   //     Math.sin(el),
@@ -123,11 +120,10 @@ export function SunBox({ azimuth = 34, elevation = 35 }) {
       {/* Sun Directional Light */}
       <directionalLight
         ref={sunRef}
-        position={sunPosition.multiplyScalar(30)} // Controls direction, not intensity
-        intensity={5} // Adjust this value to change lighting strength
+        position={sunPosition.multiplyScalar(30)} // controls direction, not intensity
+        intensity={5}
         color="#ffddaa"
         castShadow
-        // shadow props
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-near={0.1}
@@ -137,7 +133,6 @@ export function SunBox({ azimuth = 34, elevation = 35 }) {
         shadow-camera-top={50}
         shadow-camera-bottom={-50}
       >
-        {/* Sun Visual Object as a Child of the Light */}
         <mesh>
           <sphereGeometry args={[1, 32, 32]} />
           <meshStandardMaterial

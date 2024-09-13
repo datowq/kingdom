@@ -7,7 +7,6 @@
 
 // uniforms: iTime, modelMatrix, viewMatrix, projectionMatrix, position, uv, color
 uniform float iTime;
-uniform float waveSpeed;
 
 // attributes: position, uv, color
 
@@ -42,9 +41,9 @@ void main() {
   // iTime is a uniform that represents the time in seconds since the start of the program
   // in this case the color is used to encode height information about the grass
   if (color.x > 0.6f) {
-    modelPosition.x += sin((iTime / waveSpeed) + (uv.x * waveSize)) * tipDistance;
+    modelPosition.x += sin((iTime / 2.) + (uv.x * waveSize)) * tipDistance;
   }else if (color.x > 0.0f) {
-    modelPosition.x += sin((iTime / waveSpeed) + (uv.x * waveSize)) * centerDistance;
+    modelPosition.x += sin((iTime / 2.) + (uv.x * waveSize)) * centerDistance;
   }
 
   cloudUV.x += iTime / 50.;

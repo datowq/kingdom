@@ -1,5 +1,4 @@
-uniform sampler2D textures[4];
-uniform 
+// uniform sampler2D textures[4];
 
 in vec2 vUV;
 in vec2 cloudUV;
