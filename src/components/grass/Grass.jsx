@@ -118,7 +118,7 @@ export const GrassField = () => {
     []
   );
 
-  const geometry = useMemo(
+  const grassGeometry = useMemo(
     () =>
       generateField(
         planeSize,
@@ -139,7 +139,7 @@ export const GrassField = () => {
 
   return (
     <>
-      <mesh geometry={geometry} castShadow={true} receiveShadow={true}>
+      <mesh geometry={grassGeometry} castShadow={true} receiveShadow={true}>
         <CustomShaderMaterial
           ref={grassMaterialRef}
           baseMaterial={THREE.MeshToonMaterial}
@@ -150,6 +150,10 @@ export const GrassField = () => {
           side={THREE.DoubleSide}
           silent
         />
+      </mesh>
+      <mesh position={[0, 2, 5]} castShadow={true} receiveShadow={true}>
+        <boxGeometry args={[1, 4, 5]} />
+        {/* <CustomShaderMaterial /> */}
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow={true}>
         <planeGeometry args={[planeSize, planeSize, 1, 1]} />
