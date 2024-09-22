@@ -1,4 +1,5 @@
-import React, { useMemo, useRef } from "react";
+// GrassField.jsx
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import grassShader from "@/components/grass/shaders/grass";
@@ -7,13 +8,11 @@ import cloudTexture from "@/components/grass/textures/cloud.jpg";
 import CustomShaderMaterial from "three-custom-shader-material";
 import { useControls, folder } from "leva";
 
-const startTime = Date.now();
-
 const convertRange = (val, oldMin, oldMax, newMin, newMax) => {
   return ((val - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
 };
 
-export const GrassField = () => {
+export const GrassField = ({ maskCanvas }) => {
   const grassMaterialRef = useRef();
 
   const {
@@ -118,17 +117,26 @@ export const GrassField = () => {
     []
   );
 
-  const grassGeometry = useMemo(
-    () =>
-      generateField(
-        planeSize,
-        bladeCount,
-        bladeWidth,
-        bladeHeight,
-        bladeHeightVariation
-      ),
-    [planeSize, bladeCount, bladeWidth, bladeHeight, bladeHeightVariation]
-  );
+  const [grassGeometry, setGrassGeometry] = useState(null);
+
+  useEffect(() => {
+    const geometry = generateField(
+      planeSize,
+      bladeCount,
+      bladeWidth,
+      bladeHeight,
+      bladeHeightVariation,
+      maskCanvas
+    );
+    setGrassGeometry(geometry);
+  }, [
+    planeSize,
+    bladeCount,
+    bladeWidth,
+    bladeHeight,
+    bladeHeightVariation,
+    maskCanvas,
+  ]);
 
   useFrame((state) => {
     if (grassMaterialRef.current) {
@@ -139,22 +147,25 @@ export const GrassField = () => {
 
   return (
     <>
-      <mesh geometry={grassGeometry} castShadow={true} receiveShadow={true}>
-        <CustomShaderMaterial
-          ref={grassMaterialRef}
-          baseMaterial={THREE.MeshToonMaterial}
-          uniforms={grassUniforms}
-          vertexShader={grassShader.vert}
-          color={adjustedColor}
-          vertexColors={true}
-          side={THREE.DoubleSide}
-          silent
-        />
-      </mesh>
-      <mesh position={[0, 2, 5]} castShadow={true} receiveShadow={true}>
+      {grassGeometry && (
+        <mesh geometry={grassGeometry} castShadow={true} receiveShadow={true}>
+          <CustomShaderMaterial
+            ref={grassMaterialRef}
+            baseMaterial={THREE.MeshToonMaterial}
+            uniforms={grassUniforms}
+            vertexShader={grassShader.vert}
+            color={adjustedColor}
+            vertexColors={true}
+            side={THREE.DoubleSide}
+            silent
+          />
+        </mesh>
+      )}
+
+      {/* <mesh position={[0, 2, 5]} castShadow={true} receiveShadow={true}>
         <boxGeometry args={[1, 4, 5]} />
-        {/* <CustomShaderMaterial /> */}
-      </mesh>
+      </mesh> */}
+
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow={true}>
         <planeGeometry args={[planeSize, planeSize, 1, 1]} />
         <meshStandardMaterial color="gray" />
@@ -168,7 +179,8 @@ const generateField = (
   bladeCount,
   bladeWidth,
   bladeHeight,
-  bladeHeightVariation
+  bladeHeightVariation,
+  maskCanvas
 ) => {
   const positions = [];
   const uvs = [];
@@ -180,33 +192,87 @@ const generateField = (
   const surfaceMax = planeSize / 2;
   const radius = planeSize / 2;
 
-  for (let i = 0; i < bladeCount; i++) {
-    const r = radius * Math.sqrt(Math.random());
-    const theta = Math.random() * 2 * Math.PI;
-    const x = r * Math.cos(theta);
-    const y = r * Math.sin(theta);
+  if (!maskCanvas) {
+    for (let i = 0; i < bladeCount; i++) {
+      const r = radius * Math.sqrt(Math.random());
+      const theta = Math.random() * 2 * Math.PI;
+      const x = r * Math.cos(theta);
+      const z = r * Math.sin(theta);
 
-    const pos = new THREE.Vector3(x, 0, y);
+      const pos = new THREE.Vector3(x, 0, z);
 
-    const uv = [
-      convertRange(pos.x, surfaceMin, surfaceMax, 0, 1),
-      convertRange(pos.z, surfaceMin, surfaceMax, 0, 1),
-    ];
+      const uv = [
+        convertRange(pos.x, surfaceMin, surfaceMax, 0, 1),
+        convertRange(pos.z, surfaceMin, surfaceMax, 0, 1),
+      ];
 
-    const blade = generateBlade(
-      pos,
-      i * VERTEX_COUNT,
-      uv,
-      bladeWidth,
-      bladeHeight,
-      bladeHeightVariation
+      const blade = generateBlade(
+        pos,
+        i * VERTEX_COUNT,
+        uv,
+        bladeWidth,
+        bladeHeight,
+        bladeHeightVariation
+      );
+      blade.verts.forEach((vert) => {
+        positions.push(...vert.pos);
+        uvs.push(...vert.uv);
+        colors.push(...vert.color);
+      });
+      blade.indices.forEach((indice) => indices.push(indice));
+    }
+  } else {
+    const { data, width, height } = maskCanvas;
+    let generated = 0;
+    const maxAttempts = bladeCount * 10;
+    let attempts = 0;
+
+    while (generated < bladeCount && attempts < maxAttempts) {
+      const r = radius * Math.sqrt(Math.random());
+      const theta = Math.random() * 2 * Math.PI;
+      const x = r * Math.cos(theta);
+      const z = r * Math.sin(theta);
+
+      const pos = new THREE.Vector3(x, 0, z);
+
+      const u = convertRange(x, surfaceMin, surfaceMax, 0, width - 1);
+      const v = convertRange(z, surfaceMin, surfaceMax, 0, height - 1);
+
+      const pixelIndex = (Math.floor(v) * width + Math.floor(u)) * 4;
+
+      const isWhite =
+        data[pixelIndex] === 255 &&
+        data[pixelIndex + 1] === 255 &&
+        data[pixelIndex + 2] === 255;
+
+      if (isWhite) {
+        const uvCoords = [
+          convertRange(pos.x, surfaceMin, surfaceMax, 0, 1),
+          convertRange(pos.z, surfaceMin, surfaceMax, 0, 1),
+        ];
+
+        const blade = generateBlade(
+          pos,
+          generated * VERTEX_COUNT,
+          uvCoords,
+          bladeWidth,
+          bladeHeight,
+          bladeHeightVariation
+        );
+        blade.verts.forEach((vert) => {
+          positions.push(...vert.pos);
+          uvs.push(...vert.uv);
+          colors.push(...vert.color);
+        });
+        blade.indices.forEach((indice) => indices.push(indice));
+        generated++;
+      }
+      attempts++;
+    }
+
+    console.warn(
+      `Generated ${generated} blades out of ${bladeCount} requested. Consider increasing maxAttempts or adjusting bladeCount.`
     );
-    blade.verts.forEach((vert) => {
-      positions.push(...vert.pos);
-      uvs.push(...vert.uv);
-      colors.push(...vert.color);
-    });
-    blade.indices.forEach((indice) => indices.push(indice));
   }
 
   const geom = new THREE.BufferGeometry();
@@ -248,30 +314,30 @@ const generateBlade = (
 
   const bl = new THREE.Vector3().addVectors(
     center,
-    new THREE.Vector3().copy(yawUnitVec).multiplyScalar((bladeWidth / 2) * 1)
+    yawUnitVec.clone().multiplyScalar((bladeWidth / 2) * 1)
   );
   const br = new THREE.Vector3().addVectors(
     center,
-    new THREE.Vector3().copy(yawUnitVec).multiplyScalar((bladeWidth / 2) * -1)
+    yawUnitVec.clone().multiplyScalar((bladeWidth / 2) * -1)
   );
   const tl = new THREE.Vector3().addVectors(
     center,
-    new THREE.Vector3().copy(yawUnitVec).multiplyScalar((MID_WIDTH / 2) * 1)
+    yawUnitVec.clone().multiplyScalar((MID_WIDTH / 2) * 1)
   );
   const tr = new THREE.Vector3().addVectors(
     center,
-    new THREE.Vector3().copy(yawUnitVec).multiplyScalar((MID_WIDTH / 2) * -1)
+    yawUnitVec.clone().multiplyScalar((MID_WIDTH / 2) * -1)
   );
   const tc = new THREE.Vector3().addVectors(
     center,
-    new THREE.Vector3().copy(tipBendUnitVec).multiplyScalar(TIP_OFFSET)
+    tipBendUnitVec.clone().multiplyScalar(TIP_OFFSET)
   );
 
   tl.y += height / 2;
   tr.y += height / 2;
   tc.y += height;
 
-  // vertex Colors
+  // Vertex Colors
   const black = [0, 0, 0];
   const gray = [0.5, 0.5, 0.5];
   const white = [1.0, 1.0, 1.0];
@@ -298,3 +364,5 @@ const generateBlade = (
 
   return { verts, indices };
 };
+
+export default GrassField;

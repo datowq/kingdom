@@ -13,7 +13,7 @@ import { GrassField } from "@/components/grass/Grass";
 import { DirectionalLightHelper, DirectionalLight } from "three";
 import { Skybox, SunBox } from "./components/sky/Sky";
 
-const MainScene = () => {
+const MainScene = ({ maskCanvas }) => {
   // useEffect(() => {
   //   checkWebGLVersions();
   // }, []);
@@ -25,19 +25,19 @@ const MainScene = () => {
         {/* <Sky /> */}
         <SunBox />
         {/* <Environment
-          files="src/assets/sky_linekotsi_05_b_HDRI.hdr" // Path to your HDRI file
-          background // This sets the HDRI as the scene background
+          files="src/assets/sky_linekotsi_05_b_HDRI.hdr"
+          background 
         /> */}
         {/* <Stage
-          intensity={1} // Adjusts the overall brightness of the lighting
-          environment="sunset" // Sets the environment map for reflections (can be set to various presets)
-          contactShadow={{ opacity: 0.5, blur: 2 }} // Configures contact shadows
-          shadows={{ type: "soft" }} // Sets shadow quality
-          adjustCamera={1} // Adjusts camera distance to fit the content
+          intensity={1}
+          environment="sunset"
+          contactShadow={{ opacity: 0.5, blur: 2 }}
+          shadows={{ type: "soft" }}
+          adjustCamera={1}
         > */}
-        <Rock position={[0, 1, 0]} scale={2} />
-        <GrassField />
-        {/* <AsciiRenderer />  */}
+        {/* <Rock position={[0, 1, 0]} scale={2} /> */}
+        <GrassField maskCanvas={maskCanvas} />
+        {/* <AsciiRenderer /> */}
         <OrbitControls />
       </Suspense>
     </>
