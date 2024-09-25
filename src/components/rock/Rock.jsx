@@ -8,10 +8,9 @@ export const Rock = (props) => {
 
   materials["Material.001"].color = new THREE.Color("blue");
 
-  // create new material for cube
   const material = new THREE.MeshStandardMaterial({
-    color: "grey",
-    roughness: 0.5,
+    color: "#a0a0a0",
+    // roughness: 0.5,
     // metalness: 0.5,
   });
 
@@ -24,11 +23,11 @@ export const Rock = (props) => {
         // material={materials.Material}
         material={material}
       />
-      <mesh
+      {/* <mesh
         geometry={nodes.Cube_2.geometry}
         material={materials["Material.001"]}
         scale={0.98}
-      />
+      /> */}
     </group>
   );
 };

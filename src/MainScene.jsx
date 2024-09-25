@@ -12,6 +12,7 @@ import { Rock } from "@/components/rock/Rock";
 import { GrassField } from "@/components/grass/Grass";
 import { DirectionalLightHelper, DirectionalLight } from "three";
 import { Skybox, SunBox } from "./components/sky/Sky";
+import { Tree } from "@/components/tree/Tree";
 
 const MainScene = ({ maskCanvas }) => {
   // useEffect(() => {
@@ -24,6 +25,7 @@ const MainScene = ({ maskCanvas }) => {
         <hemisphereLight intensity={0.5} />
         {/* <Sky /> */}
         <SunBox />
+        <Tree enabled={1.0} />
         {/* <Environment
           files="src/assets/sky_linekotsi_05_b_HDRI.hdr"
           background 
@@ -35,7 +37,7 @@ const MainScene = ({ maskCanvas }) => {
           shadows={{ type: "soft" }}
           adjustCamera={1}
         > */}
-        {/* <Rock position={[0, 1, 0]} scale={2} /> */}
+        <Rock position={[0, 0.2, 3]} scale={0.75} />
         <GrassField maskCanvas={maskCanvas} />
         {/* <AsciiRenderer /> */}
         <OrbitControls />

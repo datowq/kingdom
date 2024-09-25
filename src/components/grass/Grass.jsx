@@ -154,6 +154,7 @@ export const GrassField = ({ maskCanvas }) => {
             baseMaterial={THREE.MeshToonMaterial}
             uniforms={grassUniforms}
             vertexShader={grassShader.vert}
+            // fragmentShader={grassShader.frag}
             color={adjustedColor}
             vertexColors={true}
             side={THREE.DoubleSide}
